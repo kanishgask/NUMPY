@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""
+Advanced NumPy Demonstration Script
+This single script showcases a wide variety of NumPy features in one cohesive example.
+"""
+
+import numpy as np
+
+def main():
+    # 1. Array Creation & Data Types
+    a = np.array([1, 2, 3], dtype=np.float64)
+    b = np.arange(12).reshape(3, 4)
+    print("1. a:", a)
+    print("   b:\n", b, "\n")
+    
+    # 2. Broadcasting & Arithmetic
+    c = a * b[:, :3] + 5  # b[:, :3] is shape (3,3), a broadcasts to (3,3)
+    print("2. Broadcasting result c:\n", c, "\n")
+    
+    # 3. Universal Functions (ufuncs)
+    d = np.sin(c)          # elementwise sine
+    e = np.maximum(c, 7)   # elementwise maximum
+    print("3. sin(c):\n", d)
+    print("   maximum(c,7):\n", e, "\n")
+    
+    # 4. Advanced Indexing
+    # Fancy indexing and boolean masking
+    idx = [0, 2]
+    f = b[:, idx]
+    mask = (b % 3 == 0)
+    g = b[mask]
+    print("4. fancy-indexed f:\n", f)
+    print("   mask of multiples of 3:", mask)
+    print("   elements g (b%3==0):", g, "\n")
+    
+    # 5. Structured Arrays for heterogeneous data
+    dt = np.dtype([('id', 'i4'), ('value', 'f4'), ('flag', 'b1')])
+    structured = np.array([(10, 3.14, True),
+                           (20, 2.71, False),
+                           (30, 1.62, True)], dtype=dt)
+    print("5. structured array:\n", structured, "\n")
+    
+    # 6. Masked Arrays
+    h = np.ma.masked_where(b < 5, b)
+    print("6. masked array (mask b<5):\n", h, "\n")
+    
+    # 7. Linear Algebra Operations
+    M = np.random.default_rng(seed=0).random((4, 4))
+    invM = np.linalg.inv(M)
+    vals, vecs = np.linalg.eig(M @ invM)
+    print("7. identity check eigenvalues:", vals, "\n")
+    
+    # 8. Random Sampling & Statistics
+    rng = np.random.default_rng(seed=1)
+    sample = rng.normal(loc=0, scale=1, size=(1000,))
+    mean, std = sample.mean(), sample.std()
+    hist, bins = np.histogram(sample, bins=30)
+    print(f"8. sample mean={mean:.3f}, std={std:.3f}")
+    print("   histogram counts:", hist)
+    print("   bin edges:", bins, "\n")
+    
+    # 9. Memory Views & Stride Tricks
+    sliding = np.lib.stride_tricks.sliding_window_view(b, (2, 2))
+    print("9. sliding-window view of b shape:", sliding.shape, "\n")
+    
+    # 10. Einstein Summation for reductions
+    col_sums = np.einsum('ij->j', b)
+    row_sums = np.einsum('ij->i', b)
+    print("10. col sums via einsum:", col_sums)
+    print("    row sums via einsum:", row_sums, "\n")
+    
+    # 11. Fourier Transform
+    x = np.linspace(0, 2*np.pi, 100)
+    signal = np.sin(5*x) + 0.5*np.sin(10*x)
+    spectrum = np.fft.fft(signal)
+    print("11. FFT first five components:", spectrum[:5], "\n")
+    
+    # 12. Polynomial Evaluation & Fitting
+    # Define polynomial p(x) = 2x^2 - 3x + 1
+    p = np.poly1d([2, -3, 1])
+    xs = np.array([0, 1, 2, 3])
+    ys = p(xs)
+    # Fit a quadratic to noisy data
+    noisy = ys + rng.standard_normal(xs.shape)*0.2
+    coeffs = np.polyfit(xs, noisy, deg=2)
+    print("12. original ys:", ys)
+    print("    fitted coeffs:", coeffs, "\n")
+    
+    # 13. Combining Everything: Data pipeline example
+    # Create synthetic dataset
+    features = np.vstack([sample[:100], sample[100:200], sample[200:300]]).T  # shape (100,3)
+    labels = (features.sum(axis=1) > 0).astype(int)
+    # Standardize
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    features_std = scaler.fit_transform(features)
+    # Simple matrix operations
+    W = rng.standard_normal((3, 1))
+    logits = features_std @ W + 0.1
+    probs = 1/(1+np.exp(-logits))
+    predictions = (probs.ravel() > 0.5).astype(int)
+    accuracy = (predictions == labels).mean()
+    print(f"13. Synthetic binary classification accuracy: {accuracy:.2%}")
+
+if __name__ == "__main__":
+    main()
